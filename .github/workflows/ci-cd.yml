@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: CI/CD Pipeline for Wisecow
 
 on:
   push:
@@ -8,7 +8,9 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+
     steps:
+        
       - name: Checkout code
         uses: actions/checkout@v3
 
@@ -19,19 +21,35 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build Docker image
-        run: docker build -t siddesh051/wise5:latest .
+        run: |
+          IMAGE_TAG=${GITHUB_RUN_NUMBER}
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/wise5:$IMAGE_TAG .
+          docker tag ${{ secrets.DOCKER_USERNAME }}/wise5:$IMAGE_TAG ${{ secrets.DOCKER_USERNAME }}/wise5:latest
 
       - name: Push Docker image
-        run: docker push siddesh051/wise5:latest
+        run: |
+          IMAGE_TAG=${GITHUB_RUN_NUMBER}
+          docker push ${{ secrets.DOCKER_USERNAME }}/wise5:$IMAGE_TAG
+         # docker push ${{ secrets.DOCKER_USERNAME }}/wise5:latest
 
       - name: Set up kubectl
         uses: azure/setup-kubectl@v3
         with:
           version: 'latest'
 
+      - name: Configure kubeconfig
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBE_CONFIG_DATA }}" | base64 --decode > $HOME/.kube/config
+
       - name: Apply Kubernetes manifests
         run: |
-          kubectl apply -f k8s/namespace.yml
-          kubectl apply -f k8s/deployment.yml
-          kubectl apply -f k8s/service.yml
-          kubectl apply -f k8s/ingress.yml
+          kubectl apply -f k8s/namespace.yaml
+          kubectl apply -f k8s/deployment.yaml
+          kubectl apply -f k8s/service.yaml
+          kubectl apply -f k8s/ingress.yaml
+
+      - name: Verify deployment
+        run: |
+          kubectl rollout status deployment/wisecow -n wisecow-ns
+
