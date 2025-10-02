@@ -45,7 +45,7 @@ jobs:
           aws-region: ap-south-1
 
       - name: Update kubeconfig
-        run: aws eks update-kubeconfig --region ap-south-1 --name eks-git
+        run: aws eks update-kubeconfig --region ap-south-1 --name cluster1
 
       - name: Apply Kubernetes manifests
         run: |
