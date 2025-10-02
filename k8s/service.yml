@@ -4,7 +4,7 @@ metadata:
   name: wisecow
   namespace: wisecow-ns1
 spec:
-  type: ClusterIP 
+  type: LoadBalancer 
   selector:
     app: wisecow
   ports:
